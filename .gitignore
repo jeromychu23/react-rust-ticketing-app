@@ -1,0 +1,31 @@
+# Node / React
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Rust
+target/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python (如果你之後有用)
+.venv/
+__pycache__/
+*.pyc
