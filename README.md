@@ -1,153 +1,51 @@
-# React + Rust Online Ticket System
+# React + Rust 線上取號系統
 
-A full-stack online ticketing system built with **React**, **Rust (Axum)**, and **PostgreSQL**.
+使用 `React + TypeScript`（前端）與 `Rust + Axum + SQLx`（後端）打造的全端取號系統。  
+支援建立取號、查詢單筆、更新資料，以及顯示最新 5 筆紀錄。
 
-This project allows users to take a queue number online, search ticket records by serial number, and update ticket information. It is designed as a learning project to practice full-stack development, API design, and database integration.
+## 功能特色
 
----
+- 建立取號（姓名、事由）
+- 自動產生流水號：`ADOYYYYMMDD-XXX`
+- 每日流水號從 `001` 重新開始
+- 顯示最新 5 筆資料
+- 依流水號查詢單筆資料
+- 更新姓名與事由（同步更新 `updated_at`）
 
-## Features
+## 技術棧
 
-- Create a new ticket with:
-  - Name
-  - Reason
-- Generate daily serial numbers in the format:
+- Frontend: React, TypeScript, Vite
+- Backend: Rust, Axum, Tokio, SQLx
+- Database: PostgreSQL
 
-  `ADOYYYYMMDD-XXX`
+## 系統架構
 
-  Example:
+- 前端預設執行於 `http://localhost:5173`
+- 後端預設執行於 `http://127.0.0.1:3000`
+- 前端直接呼叫後端 API（目前 API URL 為程式內寫死）
 
-  `ADO20260316-001`
+## 快速開始
 
-- Reset daily sequence from `001` every new day
-- Save ticket records into PostgreSQL
-- Show the latest 5 ticket records
-- Search ticket by serial number
-- Update:
-  - Name
-  - Reason
-  - Updated time
+### 1) 安裝需求
 
----
+- Node.js 20+（建議 LTS）
+- Rust 1.85+（支援 Edition 2024）
+- PostgreSQL 14+（或相容版本）
 
-## Tech Stack
+### 2) 下載專案
 
-### Frontend
-- React
-- TypeScript
-- Vite
+```bash
+git clone https://github.com/your-username/react-rust-ticketing-app.git
+cd react-rust-ticketing-app
+```
 
-### Backend
-- Rust
-- Axum
-- Tokio
-- SQLx
+### 3) 建立資料庫與資料表
 
-### Database
-- PostgreSQL
+```sql
+CREATE DATABASE ticket_system;
 
----
+\c ticket_system;
 
-## Project Structure
-
-```text
-react-rust-ticketing-app/
-├─ frontend/
-│  ├─ src/
-│  ├─ package.json
-│  └─ vite.config.ts
-│
-├─ backend/
-│  ├─ src/
-│  │  ├─ app_state.rs
-│  │  ├─ main.rs
-│  │  ├─ handlers/
-│  │  ├─ models/
-│  │  ├─ routes/
-│  │  └─ utils/
-│  ├─ Cargo.toml
-│  └─ .env
-│
-└─ README.md
-
-Main Functions
-1. Create Ticket
-
-Users enter:
-
-Name
-
-Reason
-
-Then the backend generates a serial number and stores the record in PostgreSQL.
-
-2. Serial Number Rule
-
-Format:
-
-ADOYYYYMMDD-XXX
-
-Rules:
-
-ADO is fixed
-
-YYYYMMDD is the current date
-
-XXX is the sequence number of that day
-
-Sequence resets every day from 001
-
-3. Recent 5 Records
-
-The frontend fetches and displays the latest 5 records from the backend.
-
-4. Search by Serial Number
-
-Users can search for a specific record by entering a serial number.
-
-5. Update Ticket Info
-
-Users can update:
-
-Name
-
-Reason
-
-When updated, the backend also updates updated_at.
-
-API Endpoints
-Health Check
-GET /api/health
-Get Recent 5 Tickets
-GET /api/tickets/recent
-Create Ticket
-POST /api/tickets
-Content-Type: application/json
-
-Request body:
-
-{
-  "name": "Jeremy",
-  "reason": "Document submission"
-}
-Search Ticket by Serial Number
-GET /api/tickets/:serial_no
-
-Example:
-
-GET /api/tickets/ADO20260316-001
-Update Ticket
-PUT /api/tickets/:serial_no
-Content-Type: application/json
-
-Request body:
-
-{
-  "name": "Jeremy Chu",
-  "reason": "Update reason"
-}
-Database Schema
-tickets
 CREATE TABLE tickets (
     id SERIAL PRIMARY KEY,
     serial_no VARCHAR(20) NOT NULL UNIQUE,
@@ -156,110 +54,144 @@ CREATE TABLE tickets (
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
-Local Setup
-1. Clone Repository
-git clone https://github.com/your-username/react-rust-ticketing-app.git
-cd react-rust-ticketing-app
-2. Frontend Setup
+```
+
+### 4) 設定後端環境變數
+
+在 `backend/.env` 設定：
+
+```env
+DATABASE_URL=postgres://postgres:your_password@localhost:5432/ticket_system
+```
+
+### 5) 啟動後端
+
+```bash
+cd backend
+cargo run
+```
+
+看到以下訊息代表成功：
+
+```text
+Connected to PostgreSQL successfully
+server running on http://127.0.0.1:3000
+```
+
+### 6) 啟動前端
+
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
-Frontend runs at:
+開啟 `http://localhost:5173` 即可使用。
 
-http://localhost:5173
-3. Backend Setup
-cd backend
-cargo run
+## API 文件
 
-Backend runs at:
+Base URL: `http://127.0.0.1:3000`
 
-http://127.0.0.1:3000
-4. PostgreSQL Setup
+### Health Check
 
-Create a database named:
+- `GET /api/health`
 
-ticket_system
+Response:
 
-Then create the tickets table using the SQL above.
+```text
+OK
+```
 
-5. Environment Variable
+### 建立取號
 
-Create backend/.env:
+- `POST /api/tickets`
+- `Content-Type: application/json`
 
-DATABASE_URL=postgres://postgres:your_password@localhost:5432/ticket_system
-Development Notes
-CORS
+Request:
 
-Since the frontend and backend run on different ports during local development, CORS is enabled in the backend.
+```json
+{
+  "name": "Jeremy",
+  "reason": "Document submission"
+}
+```
 
-Current Status
+### 最新 5 筆
 
-This project currently supports:
+- `GET /api/tickets/recent`
 
-Ticket creation
+### 查詢單筆
 
-Recent ticket listing
+- `GET /api/tickets/:serial_no`
+- 範例：`GET /api/tickets/ADO20260316-001`
 
-Ticket search
+### 更新單筆
 
-Ticket update
+- `PUT /api/tickets/:serial_no`
+- `Content-Type: application/json`
 
-PostgreSQL integration
+Request:
 
-Learning Goals
+```json
+{
+  "name": "Jeremy Chu",
+  "reason": "Update reason"
+}
+```
 
-This project was built to practice:
+## 流水號規則
 
-Frontend and backend integration
+- 格式：`ADOYYYYMMDD-XXX`
+- `ADO` 為固定前綴
+- `YYYYMMDD` 為後端當地日期
+- `XXX` 為當日遞增序號（3 碼，從 `001` 開始）
+- 日期變更時重新從 `001` 計算
 
-RESTful API design
+範例：`ADO20260316-001`
 
-Rust backend development with Axum
+## 專案結構
 
-PostgreSQL CRUD operations
+```text
+react-rust-ticketing-app/
+  README.md
+  frontend/
+    src/
+    package.json
+    vite.config.ts
+  backend/
+    src/
+      main.rs
+      app_state.rs
+      handlers/
+      models/
+      routes/
+      utils/
+    Cargo.toml
+```
 
-Serial number generation logic
+## 開發指令
 
-Full-stack project structure
+Frontend（`frontend/`）：
 
-Future Improvements
+- `npm run dev`：啟動開發伺服器
+- `npm run build`：打包
+- `npm run lint`：執行 ESLint
+- `npm run preview`：預覽 build 結果
 
-Possible next steps:
+Backend（`backend/`）：
 
-Better UI styling
+- `cargo run`：啟動後端
+- `cargo check`：快速型別檢查
+- `cargo test`：執行測試（若有）
 
-Form validation improvements
+## 後續可改進方向
 
-Loading / success / error states
+- 前端 API URL 改為 `.env` 可設定
+- 表單驗證與錯誤訊息優化
+- 增加 migration（例如使用 `sqlx migrate`）
+- 增加整合測試與單元測試
+- Docker 化部署
 
-Docker support
+## 備註
 
-Authentication / admin mode
-
-Pagination
-
-Unit tests
-
-Deployment
-
-Screenshots
-
-You can add screenshots here later:
-
-Home page
-
-Ticket creation
-
-Search result
-
-Update result
-
-Example:
-
-![Home Page](./docs/home.png)
-Author
-
-Jeremy
-
-This project is built for learning purposes and portfolio demonstration.
+此專案主要用於學習與作品展示。
