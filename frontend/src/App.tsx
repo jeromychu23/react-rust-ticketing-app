@@ -15,12 +15,23 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [latestTicket, setLatestTicket] = useState<Ticket | null>(null);
 
+  const [searchSerialNo, setSearchSerialNo] = useState("");
+  const [searchResult, setSearchResult] = useState<Ticket | null>(null);
+  const [searchMessage, setSearchMessage] = useState("");
+
   useEffect(() => {
-    fetch("http://127.0.0.1:3000/api/tickets/recent")
-      .then((res) => res.json())
-      .then((data) => setTickets(data))
-      .catch((err) => console.error("Failed to fetch tickets:", err));
+    fetchRecentTickets();
   }, []);
+
+  const fetchRecentTickets = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:3000/api/tickets/recent");
+      const data = await response.json();
+      setTickets(data);
+    } catch (err) {
+      console.error("Failed to fetch tickets:", err);
+    }
+  };
 
   const handleTakeTicket = async () => {
     if (!name.trim()) {
@@ -60,6 +71,39 @@ function App() {
     } catch (error) {
       console.error(error);
       setErrorMessage("取號失敗，請稍後再試");
+    }
+  };
+
+  const handleSearchTicket = async () => {
+    if (!searchSerialNo.trim()) {
+      setSearchMessage("請輸入流水號");
+      setSearchResult(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:3000/api/tickets/${searchSerialNo}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to search ticket");
+      }
+
+      const data: Ticket | null = await response.json();
+
+      if (!data) {
+        setSearchMessage("查無資料");
+        setSearchResult(null);
+        return;
+      }
+
+      setSearchMessage("");
+      setSearchResult(data);
+    } catch (error) {
+      console.error(error);
+      setSearchMessage("搜尋失敗，請稍後再試");
+      setSearchResult(null);
     }
   };
 
@@ -110,6 +154,54 @@ function App() {
           <p>取號原因：{latestTicket.reason}</p>
         </div>
       )}
+
+      <div style={cardStyle}>
+        <h2>搜尋流水號</h2>
+
+        <div style={{ marginBottom: "12px" }}>
+          <label style={labelStyle}>流水號</label>
+          <input
+            style={inputStyle}
+            type="text"
+            value={searchSerialNo}
+            onChange={(e) => setSearchSerialNo(e.target.value)}
+            placeholder="例如 ADO20260316-001"
+          />
+        </div>
+
+        {searchMessage && (
+          <p style={{ color: "red", marginBottom: "12px" }}>{searchMessage}</p>
+        )}
+
+        <button style={buttonStyle} type="button" onClick={handleSearchTicket}>
+          搜尋
+        </button>
+
+        {searchResult && (
+          <div style={{ marginTop: "16px", borderTop: "1px solid #ddd", paddingTop: "16px" }}>
+            <p>
+              <strong>流水號：</strong>
+              {searchResult.serial_no}
+            </p>
+            <p>
+              <strong>姓名：</strong>
+              {searchResult.name}
+            </p>
+            <p>
+              <strong>取號原因：</strong>
+              {searchResult.reason}
+            </p>
+            <p>
+              <strong>取號時間：</strong>
+              {searchResult.created_at}
+            </p>
+            <p>
+              <strong>更新時間：</strong>
+              {searchResult.updated_at}
+            </p>
+          </div>
+        )}
+      </div>
 
       <h2>最近 5 筆取號紀錄</h2>
 

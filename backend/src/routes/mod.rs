@@ -3,11 +3,14 @@ use axum::{
     Router,
 };
 
-use crate::handlers::health_handler::health_check;
+use crate::{
+    app_state::AppState,
+    handlers::health_handler::health_check,
+};
 
 pub mod ticket_routes;
 
-pub fn create_router() -> Router {
+pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/", get(root))
         .route("/api/health", get(health_check))
