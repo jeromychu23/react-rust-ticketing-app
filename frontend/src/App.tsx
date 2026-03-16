@@ -19,6 +19,10 @@ function App() {
   const [searchResult, setSearchResult] = useState<Ticket | null>(null);
   const [searchMessage, setSearchMessage] = useState("");
 
+  const [editName, setEditName] = useState("");
+  const [editReason, setEditReason] = useState("");
+  const [updateMessage, setUpdateMessage] = useState("");
+
   useEffect(() => {
     fetchRecentTickets();
   }, []);
@@ -78,6 +82,8 @@ function App() {
     if (!searchSerialNo.trim()) {
       setSearchMessage("請輸入流水號");
       setSearchResult(null);
+      setEditName("");
+      setEditReason("");
       return;
     }
 
@@ -95,15 +101,77 @@ function App() {
       if (!data) {
         setSearchMessage("查無資料");
         setSearchResult(null);
+        setEditName("");
+        setEditReason("");
         return;
       }
 
       setSearchMessage("");
+      setUpdateMessage("");
       setSearchResult(data);
+      setEditName(data.name);
+      setEditReason(data.reason);
     } catch (error) {
       console.error(error);
       setSearchMessage("搜尋失敗，請稍後再試");
       setSearchResult(null);
+      setEditName("");
+      setEditReason("");
+    }
+  };
+
+  const handleUpdateTicket = async () => {
+    if (!searchResult) return;
+
+    if (!editName.trim()) {
+      setUpdateMessage("請輸入姓名");
+      return;
+    }
+
+    if (!editReason.trim()) {
+      setUpdateMessage("請輸入取號原因");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:3000/api/tickets/${searchResult.serial_no}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: editName,
+            reason: editReason,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update ticket");
+      }
+
+      const updatedTicket: Ticket | null = await response.json();
+
+      if (!updatedTicket) {
+        setUpdateMessage("更新失敗，查無資料");
+        return;
+      }
+
+      setSearchResult(updatedTicket);
+      setEditName(updatedTicket.name);
+      setEditReason(updatedTicket.reason);
+      setUpdateMessage("更新成功");
+
+      await fetchRecentTickets();
+
+      if (latestTicket?.serial_no === updatedTicket.serial_no) {
+        setLatestTicket(updatedTicket);
+      }
+    } catch (error) {
+      console.error(error);
+      setUpdateMessage("更新失敗，請稍後再試");
     }
   };
 
@@ -178,18 +246,16 @@ function App() {
         </button>
 
         {searchResult && (
-          <div style={{ marginTop: "16px", borderTop: "1px solid #ddd", paddingTop: "16px" }}>
+          <div
+            style={{
+              marginTop: "16px",
+              borderTop: "1px solid #ddd",
+              paddingTop: "16px",
+            }}
+          >
             <p>
               <strong>流水號：</strong>
               {searchResult.serial_no}
-            </p>
-            <p>
-              <strong>姓名：</strong>
-              {searchResult.name}
-            </p>
-            <p>
-              <strong>取號原因：</strong>
-              {searchResult.reason}
             </p>
             <p>
               <strong>取號時間：</strong>
@@ -199,6 +265,44 @@ function App() {
               <strong>更新時間：</strong>
               {searchResult.updated_at}
             </p>
+
+            <div style={{ marginTop: "16px" }}>
+              <label style={labelStyle}>姓名</label>
+              <input
+                style={inputStyle}
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginTop: "12px" }}>
+              <label style={labelStyle}>取號原因</label>
+              <textarea
+                style={textareaStyle}
+                value={editReason}
+                onChange={(e) => setEditReason(e.target.value)}
+              />
+            </div>
+
+            {updateMessage && (
+              <p
+                style={{
+                  color: updateMessage === "更新成功" ? "green" : "red",
+                  marginTop: "12px",
+                }}
+              >
+                {updateMessage}
+              </p>
+            )}
+
+            <button
+              style={{ ...buttonStyle, marginTop: "12px" }}
+              type="button"
+              onClick={handleUpdateTicket}
+            >
+              更新
+            </button>
           </div>
         )}
       </div>

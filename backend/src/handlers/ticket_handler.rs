@@ -1,11 +1,11 @@
 use axum::{
-    Json,
     extract::{Path, State},
+    Json,
 };
 
 use crate::{
     app_state::AppState,
-    models::ticket::{CreateTicketRequest, Ticket},
+    models::ticket::{CreateTicketRequest, Ticket, UpdateTicketRequest},
     utils::serial_no::generate_serial_no,
 };
 
@@ -16,8 +16,8 @@ pub async fn get_recent_tickets(State(state): State<AppState>) -> Json<Vec<Ticke
             serial_no,
             name,
             reason,
-            created_at::text AS created_at,
-            updated_at::text AS updated_at
+            to_char(created_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+            to_char(updated_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS updated_at
         FROM tickets
         ORDER BY created_at DESC
         LIMIT 5
@@ -44,8 +44,8 @@ pub async fn create_ticket(
             serial_no,
             name,
             reason,
-            created_at::text AS created_at,
-            updated_at::text AS updated_at
+            to_char(created_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+            to_char(updated_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS updated_at
         "#,
     )
     .bind(serial_no)
@@ -68,12 +68,43 @@ pub async fn get_ticket_by_serial_no(
             serial_no,
             name,
             reason,
-            created_at::text AS created_at,
-            updated_at::text AS updated_at
+            to_char(created_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+            to_char(updated_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS updated_at
         FROM tickets
         WHERE serial_no = $1
         "#,
     )
+    .bind(serial_no)
+    .fetch_optional(&state.db)
+    .await
+    .unwrap();
+
+    Json(ticket)
+}
+
+pub async fn update_ticket_by_serial_no(
+    State(state): State<AppState>,
+    Path(serial_no): Path<String>,
+    Json(payload): Json<UpdateTicketRequest>,
+) -> Json<Option<Ticket>> {
+    let ticket = sqlx::query_as::<_, Ticket>(
+        r#"
+        UPDATE tickets
+        SET
+            name = $1,
+            reason = $2,
+            updated_at = NOW()
+        WHERE serial_no = $3
+        RETURNING
+            serial_no,
+            name,
+            reason,
+            to_char(created_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+            to_char(updated_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+        "#,
+    )
+    .bind(payload.name)
+    .bind(payload.reason)
     .bind(serial_no)
     .fetch_optional(&state.db)
     .await

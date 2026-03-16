@@ -29,3 +29,23 @@ Thumbs.db
 .venv/
 __pycache__/
 *.pyc
+
+# frontend
+frontend/node_modules
+frontend/dist
+
+# backend
+backend/target
+
+# env files
+backend/.env
+frontend/.env
+
+# logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode
+.idea
