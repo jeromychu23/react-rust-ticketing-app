@@ -1,121 +1,205 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+
+type Ticket = {
+  serial_no: string;
+  name: string;
+  reason: string;
+  created_at: string;
+  updated_at: string;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [name, setName] = useState("");
+  const [reason, setReason] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [latestTicket, setLatestTicket] = useState<Ticket | null>(null);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:3000/api/tickets/recent")
+      .then((res) => res.json())
+      .then((data) => setTickets(data))
+      .catch((err) => console.error("Failed to fetch tickets:", err));
+  }, []);
+
+  const handleTakeTicket = async () => {
+    if (!name.trim()) {
+      setErrorMessage("請輸入姓名");
+      return;
+    }
+
+    if (!reason.trim()) {
+      setErrorMessage("請輸入取號原因");
+      return;
+    }
+
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("http://127.0.0.1:3000/api/tickets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          reason,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create ticket");
+      }
+
+      const newTicket: Ticket = await response.json();
+
+      setLatestTicket(newTicket);
+      setTickets((prev) => [newTicket, ...prev].slice(0, 5));
+      setName("");
+      setReason("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("取號失敗，請稍後再試");
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+      <h1>Online Ticket System</h1>
+
+      <div style={cardStyle}>
+        <h2>取號</h2>
+
+        <div style={{ marginBottom: "12px" }}>
+          <label style={labelStyle}>姓名</label>
+          <input
+            style={inputStyle}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="請輸入姓名"
+          />
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+
+        <div style={{ marginBottom: "12px" }}>
+          <label style={labelStyle}>取號原因</label>
+          <textarea
+            style={textareaStyle}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="請輸入取號原因"
+          />
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+
+        {errorMessage && (
+          <p style={{ color: "red", marginBottom: "12px" }}>{errorMessage}</p>
+        )}
+
+        <button style={buttonStyle} type="button" onClick={handleTakeTicket}>
+          取號
         </button>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {latestTicket && (
+        <div style={successCardStyle}>
+          <h2>最新取號結果</h2>
+          <p>
+            您的號碼是：<strong>{latestTicket.serial_no}</strong>
+          </p>
+          <p>姓名：{latestTicket.name}</p>
+          <p>取號原因：{latestTicket.reason}</p>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <h2>最近 5 筆取號紀錄</h2>
+
+      {tickets.length === 0 ? (
+        <p>No tickets found.</p>
+      ) : (
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            marginTop: "16px",
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={thStyle}>流水號</th>
+              <th style={thStyle}>姓名</th>
+              <th style={thStyle}>取號原因</th>
+              <th style={thStyle}>取號時間</th>
+              <th style={thStyle}>更新時間</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tickets.map((ticket) => (
+              <tr key={ticket.serial_no}>
+                <td style={tdStyle}>{ticket.serial_no}</td>
+                <td style={tdStyle}>{ticket.name}</td>
+                <td style={tdStyle}>{ticket.reason}</td>
+                <td style={tdStyle}>{ticket.created_at}</td>
+                <td style={tdStyle}>{ticket.updated_at}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
 }
 
-export default App
+const cardStyle: React.CSSProperties = {
+  border: "1px solid #ddd",
+  borderRadius: "8px",
+  padding: "20px",
+  marginBottom: "24px",
+  backgroundColor: "#fafafa",
+};
+
+const successCardStyle: React.CSSProperties = {
+  border: "1px solid #b7eb8f",
+  borderRadius: "8px",
+  padding: "20px",
+  marginBottom: "24px",
+  backgroundColor: "#f6ffed",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: "8px",
+  fontWeight: "bold",
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px",
+  boxSizing: "border-box",
+};
+
+const textareaStyle: React.CSSProperties = {
+  width: "100%",
+  minHeight: "100px",
+  padding: "10px",
+  boxSizing: "border-box",
+};
+
+const buttonStyle: React.CSSProperties = {
+  padding: "10px 16px",
+  cursor: "pointer",
+};
+
+const thStyle: React.CSSProperties = {
+  border: "1px solid #ccc",
+  padding: "12px",
+  textAlign: "left",
+  backgroundColor: "#f5f5f5",
+};
+
+const tdStyle: React.CSSProperties = {
+  border: "1px solid #ccc",
+  padding: "12px",
+  textAlign: "left",
+};
+
+export default App;

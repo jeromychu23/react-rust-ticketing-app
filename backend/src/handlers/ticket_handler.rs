@@ -1,6 +1,6 @@
 use axum::Json;
 
-use crate::models::ticket::Ticket;
+use crate::models::ticket::{CreateTicketRequest, Ticket};
 
 pub async fn get_recent_tickets() -> Json<Vec<Ticket>> {
     let tickets = vec![
@@ -21,4 +21,16 @@ pub async fn get_recent_tickets() -> Json<Vec<Ticket>> {
     ];
 
     Json(tickets)
+}
+
+pub async fn create_ticket(Json(payload): Json<CreateTicketRequest>) -> Json<Ticket> {
+    let ticket = Ticket {
+        serial_no: "ADO20260316-003".to_string(),
+        name: payload.name,
+        reason: payload.reason,
+        created_at: "2026-03-16T10:10:00+08:00".to_string(),
+        updated_at: "2026-03-16T10:10:00+08:00".to_string(),
+    };
+
+    Json(ticket)
 }

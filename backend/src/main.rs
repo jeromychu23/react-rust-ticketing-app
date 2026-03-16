@@ -1,10 +1,14 @@
 mod handlers;
-mod routes;
 mod models;
+mod routes;
+
+use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
-    let app = routes::create_router();
+    let cors = CorsLayer::permissive();
+
+    let app = routes::create_router().layer(cors);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
