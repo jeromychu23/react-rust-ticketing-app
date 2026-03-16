@@ -1,45 +1,47 @@
-# React + Rust 線上取號系統
+# React + Rust Online Ticketing System
 
-使用 `React + TypeScript`（前端）與 `Rust + Axum + SQLx`（後端）打造的全端取號系統。  
-支援建立取號、查詢單筆、更新資料，以及顯示最新 5 筆紀錄。
+A full-stack online ticketing app built with `React + TypeScript` (frontend) and `Rust + Axum + SQLx` (backend).
+It supports ticket creation, record lookup, updates, and showing the latest 5 tickets.
 
-## 功能特色
+Chinese version: [README.md](./README.cn.md)
 
-- 建立取號（姓名、事由）
-- 自動產生流水號：`ADOYYYYMMDD-XXX`
-- 每日流水號從 `001` 重新開始
-- 顯示最新 5 筆資料
-- 依流水號查詢單筆資料
-- 更新姓名與事由（同步更新 `updated_at`）
+## Features
 
-## 技術棧
+- Create a ticket with name and reason
+- Auto-generate serial numbers in the format `ADOYYYYMMDD-XXX`
+- Reset sequence to `001` every day
+- Show the latest 5 ticket records
+- Search a ticket by serial number
+- Update name and reason (also updates `updated_at`)
+
+## Tech Stack
 
 - Frontend: React, TypeScript, Vite
 - Backend: Rust, Axum, Tokio, SQLx
 - Database: PostgreSQL
 
-## 系統架構
+## Architecture
 
-- 前端預設執行於 `http://localhost:5173`
-- 後端預設執行於 `http://127.0.0.1:3000`
-- 前端直接呼叫後端 API（目前 API URL 為程式內寫死）
+- Frontend default URL: `http://localhost:5173`
+- Backend default URL: `http://127.0.0.1:3000`
+- Frontend currently calls backend APIs via hardcoded URLs in code
 
-## 快速開始
+## Quick Start
 
-### 1) 安裝需求
+### 1) Requirements
 
-- Node.js 20+（建議 LTS）
-- Rust 1.85+（支援 Edition 2024）
-- PostgreSQL 14+（或相容版本）
+- Node.js 20+ (LTS recommended)
+- Rust 1.85+ (Edition 2024 support)
+- PostgreSQL 14+ (or compatible versions)
 
-### 2) 下載專案
+### 2) Clone the repository
 
 ```bash
 git clone https://github.com/your-username/react-rust-ticketing-app.git
 cd react-rust-ticketing-app
 ```
 
-### 3) 建立資料庫與資料表
+### 3) Create database and table
 
 ```sql
 CREATE DATABASE ticket_system;
@@ -56,29 +58,29 @@ CREATE TABLE tickets (
 );
 ```
 
-### 4) 設定後端環境變數
+### 4) Configure backend environment variable
 
-在 `backend/.env` 設定：
+Set `backend/.env`:
 
 ```env
 DATABASE_URL=postgres://postgres:your_password@localhost:5432/ticket_system
 ```
 
-### 5) 啟動後端
+### 5) Start backend
 
 ```bash
 cd backend
 cargo run
 ```
 
-看到以下訊息代表成功：
+Expected output:
 
 ```text
 Connected to PostgreSQL successfully
 server running on http://127.0.0.1:3000
 ```
 
-### 6) 啟動前端
+### 6) Start frontend
 
 ```bash
 cd frontend
@@ -86,9 +88,9 @@ npm install
 npm run dev
 ```
 
-開啟 `http://localhost:5173` 即可使用。
+Open `http://localhost:5173`.
 
-## API 文件
+## API Reference
 
 Base URL: `http://127.0.0.1:3000`
 
@@ -102,7 +104,7 @@ Response:
 OK
 ```
 
-### 建立取號
+### Create Ticket
 
 - `POST /api/tickets`
 - `Content-Type: application/json`
@@ -116,16 +118,16 @@ Request:
 }
 ```
 
-### 最新 5 筆
+### Get Latest 5 Tickets
 
 - `GET /api/tickets/recent`
 
-### 查詢單筆
+### Get Ticket By Serial Number
 
 - `GET /api/tickets/:serial_no`
-- 範例：`GET /api/tickets/ADO20260316-001`
+- Example: `GET /api/tickets/ADO20260316-001`
 
-### 更新單筆
+### Update Ticket By Serial Number
 
 - `PUT /api/tickets/:serial_no`
 - `Content-Type: application/json`
@@ -139,21 +141,22 @@ Request:
 }
 ```
 
-## 流水號規則
+## Serial Number Rule
 
-- 格式：`ADOYYYYMMDD-XXX`
-- `ADO` 為固定前綴
-- `YYYYMMDD` 為後端當地日期
-- `XXX` 為當日遞增序號（3 碼，從 `001` 開始）
-- 日期變更時重新從 `001` 計算
+- Format: `ADOYYYYMMDD-XXX`
+- `ADO` is a fixed prefix
+- `YYYYMMDD` is the backend local date
+- `XXX` is a zero-padded daily sequence starting from `001`
+- Sequence resets to `001` when the date changes
 
-範例：`ADO20260316-001`
+Example: `ADO20260316-001`
 
-## 專案結構
+## Project Structure
 
 ```text
 react-rust-ticketing-app/
   README.md
+  README.en.md
   frontend/
     src/
     package.json
@@ -169,29 +172,29 @@ react-rust-ticketing-app/
     Cargo.toml
 ```
 
-## 開發指令
+## Development Commands
 
-Frontend（`frontend/`）：
+Frontend (`frontend/`):
 
-- `npm run dev`：啟動開發伺服器
-- `npm run build`：打包
-- `npm run lint`：執行 ESLint
-- `npm run preview`：預覽 build 結果
+- `npm run dev`: start dev server
+- `npm run build`: build production assets
+- `npm run lint`: run ESLint
+- `npm run preview`: preview built assets
 
-Backend（`backend/`）：
+Backend (`backend/`):
 
-- `cargo run`：啟動後端
-- `cargo check`：快速型別檢查
-- `cargo test`：執行測試（若有）
+- `cargo run`: start backend server
+- `cargo check`: fast compile/type check
+- `cargo test`: run tests (if available)
 
-## 後續可改進方向
+## Possible Improvements
 
-- 前端 API URL 改為 `.env` 可設定
-- 表單驗證與錯誤訊息優化
-- 增加 migration（例如使用 `sqlx migrate`）
-- 增加整合測試與單元測試
-- Docker 化部署
+- Move frontend API URLs to environment variables
+- Improve form validation and user-facing error messages
+- Add migrations (for example, `sqlx migrate`)
+- Add unit and integration tests
+- Add Docker support
 
-## 備註
+## Note
 
-此專案主要用於學習與作品展示。
+This project is mainly for learning and portfolio demonstration.
